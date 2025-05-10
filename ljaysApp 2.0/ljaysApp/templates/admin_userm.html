@@ -1,0 +1,95 @@
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <title>Management: Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/admin_user.css' %}">
+    <script src="{% static 'js/user_interface.js' %}"></script>
+</head>
+<body>
+    <header class="topbar">
+        <a class="logo" href="{% url 'admin_page' %}">Ljay's</a>
+        <button id="burger-btn" onclick="toggleSidebar()" class="burger">☰</button>
+        <div class="admin-dropdown">
+            {{ request.user.username }} ▾
+            <div class="dropdown-content">
+                {% if not request.user.is_superuser %}
+                <a href="{% url 'view_profile' %}">View Profile</a>
+                {% endif %}
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <nav class="nav-links" id="sidebarLinks">
+                <a href="{% url 'admin_user' %}" class="btn_active">User Management</a>
+                <a href="{% url 'admin_order' %}" class="btn">Order Management</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+        {% if request.user.is_superuser %}
+            <div class="container">
+                <h2>Insert User</h2>
+                <form id="insertForm" method="post" action="{% url 'insert_user' %}">
+                {% csrf_token %}
+                    <label>Username:</label><br>
+                    <input type="text" name="username" required><br>
+                    <label>Password:</label><br>
+                    <input type="password" name="password" required><br>
+                    <label>Confirm Password:</label><br>
+                    <input type="password" name="confirm_password" required><br>
+                    <label>User Type:</label><br>
+                    <select name="user_type">
+                        <option value="customer" selected>Customer</option>
+                        <option value="staff">Staff</option>
+                    </select><br><br>
+                    <button type="button" onclick="clearFields()">Clear Fields</button>
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+        {% endif %}
+            <div class="container" id="users">
+                <br/>
+                <h2>Registered Users</h2>
+                <form class="search" method="get" action="{% url 'admin_user' %}">
+                    <input type="text" name="search" placeholder="Search user" value="{{ search_query }}">
+                    <button class="submit" type="submit">Search</button>
+                </form>
+                <form method="post" action="{% url 'admin_user' %}">
+                    {% csrf_token %}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" class="user-checkbox" name="user_{{ user.id }}" {% if not request.user.is_superuser %}disabled{% endif %} onclick="toggleSelectAll(this)"></th>
+                                <th>Username</th>
+                                <th>User ID</th>
+                                <th>User Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr>
+                                    <td><input type="checkbox" class="user-checkbox" name="user_{{ user.id }}" {% if not request.user.is_superuser %}disabled{% endif %}></td>
+                                    <td><a href="{% url 'user_detail' user.id %}">{{ user.username }}</a></td>
+                                    <td>{{ user.id }}</td>
+                                    <td>
+                                        {% if user.is_staff %}Staff{% else %}Customer{% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="3">No users found.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <br>
+                    <button class="deletebtn" type="submit" {% if not request.user.is_superuser %}class="disabled"{% endif %}>Delete</button>
+                </form>
+            </div>
+        </main>
+    </div>
+</body>

@@ -1,0 +1,140 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Management: Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script src="{% static 'js/user_interface.js' %}"></script>
+</head>
+<body>
+    <header class="topbar">
+        <a class="logo" href="{% url 'dashboard' %}">Ljay's</a>
+        <button id="burger-btn" onclick="toggleSidebar()" class="burger">☰</button>
+        <div class="admin-dropdown">
+            {{ request.user.username }} ▾
+            <div class="dropdown-content">
+                {% if not request.user.is_superuser %}
+                <a href="{% url 'view_profile' %}">View Profile</a>
+                {% endif %}
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <nav class="nav-links" id="sidebarLinks">
+                <button class="btn tab-btn" data-category="order-packages-section">Order</button>
+                <button class="btn tab-btn" data-category="transactions-section">Transactions</button>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            
+                <div id="dashboard-greeting" class="greeting">
+                    <h1>Hello, {{ request.user.username }}!</h1>
+                    <p class="text">What do you want to order for today?</p>
+                </div>
+            
+
+            <section id="order-packages-section" class="container tab-content" style="display: none;">
+                <h2>Order Packages</h2>
+                <div class="container">
+                    {% for order in orders %}
+                    <div class="menu-item">
+                        <h3>{{ order.name }}</h3>
+                        <div class="item-info">
+                            <div>
+                                <ul>
+                                    {% for item in order.items.all %}
+                                    <li>{{ item.name }} - {{ item.quantity }} x</li>
+                                    {% endfor %}
+                                </ul>
+                                <p><strong>Price:</strong> ₱<span id="order_{{ order.id }}_unit_price">{{ order.total_price }}</span></p>
+                            </div>
+                            <div class="quantity-controls">
+                                <span>Qty: <span id="order_{{ order.id }}_quantity_display">0</span></span>
+                                <div class="buttons">
+                                    <button type="button" onclick="modifyItemQuantity('order_{{ order.id }}', -1)">-</button>
+                                    <button type="button" onclick="modifyItemQuantity('order_{{ order.id }}', 1)">+</button>
+                                </div>
+                                <input type="hidden" id="order_{{ order.id }}_quantity_input" name="order_{{ order.id }}_quantity" value="0">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <h3>Shopping Cart</h3>
+                <div class="orders-table">
+                    <div class="table-wrapper">
+                        <table id="cart-items">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Package Name</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <form id="cart-form" method="post" action="{% url 'submit_order' %}">
+                {% csrf_token %}
+                    <div class="totals">
+                        <p>Total Quantity: <span id="cart_total_quantity">0</span></p>
+                        <p><strong>Total Price:</strong> <span id="cart_total_price">₱0.00</span></p>
+                        <button type="reset" onclick="resetShoppingCart()">Clear Fields</button>
+                        <button type="submit" form="cart-form" name="create_order">Create Order</button>
+                    </div>
+                    <input type="hidden" name="cart_items" id="cart-items-input">
+                    <input type="hidden" name="total_price" id="total-price-input">
+                    <input type="hidden" name="active_tab" id="active-tab-input" value="transactions-section">
+                </form>
+            </section>
+
+            <section id="transactions-section" class="container tab-content" style="display: none;">
+                <h2>Your Transactions</h2>
+                {% if transactions %}
+                    <div class="orders-table">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Item</th>
+                                        <th>Quantity</th>
+                                        <th>Total Price</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in transactions %}
+                                    <tr>
+                                        <td>{{ transaction.id }}</td>
+                                        <td>{{ transaction.package_name }}</td>
+                                        <td>{{ transaction.total_quantity }}</td>
+                                        <td>₱{{ transaction.total_price }}</td>
+                                        <td>{{ transaction.get_status_display }}</td>
+                                        <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>No transactions found.</p>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>

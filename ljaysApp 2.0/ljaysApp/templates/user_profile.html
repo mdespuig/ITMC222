@@ -1,0 +1,84 @@
+{% load static %}
+<html>
+<head>
+    <title>Profile</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/user_profile.css' %}">
+    <script src="{% static 'js/user_profile.js' %}"></script> 
+</head>
+<body>
+    <h1>{{ user_obj.username }}</h1>
+
+    <div id="display-section">
+        <h2>Profile</h2>
+        <table>
+            <tr>
+                <th>First Name:</th>
+                <td>{{ user_obj.first_name|default:'---' }}</td>
+            </tr>
+            <tr>
+                <th>Last Name:</th>
+                <td>{{ user_obj.last_name|default:'---' }}</td>
+            </tr>
+            <tr>
+                <th>Contact Number:</th>
+                <td>{{ profile.contact_number|default:'---' }}</td>
+            </tr>
+            <tr>
+                <th>Email:</th>
+                <td>{{ user_obj.email|default:'---' }}</td>
+            </tr>
+            <tr>
+                <th>Address:</th>
+                <td>{{ profile.address|default:'---' }}</td>
+            </tr>
+
+            {% if user_obj.is_staff %}
+                <tr>
+                    <th>Position:</th>
+                    <td>{{ profile.position|default:'---' }}</td>
+                </tr>
+            {% endif %}
+        </table>
+
+        <button onclick="enableEdit()">Edit</button>
+        <br><br>
+        {% if user_obj.is_staff %}
+            <a href="{% url 'admin_page' %}">← Dashboard</a>
+        {% else %}
+            <a href="{% url 'dashboard' %}">← Dashboard</a>
+        {% endif %}
+    </div>
+
+    <form id="edit-form" method="post" action="" style="display: none;">
+        <h2>Edit Profile</h2>
+        {% csrf_token %}
+
+        <label>First Name:</label><br>
+        <input type="text" name="first_name" value="{{ user_obj.first_name|default_if_none:'' }}"><br>
+
+        <label>Last Name:</label><br>
+        <input type="text" name="last_name" value="{{ user_obj.last_name|default_if_none:'' }}"><br>
+
+        <label>Contact Number:</label><br>
+        <input type="text" name="contact_number" value="{{ profile.contact_number|default_if_none:'' }}"><br>
+
+        <label>Email:</label><br>
+        <input type="email" name="email" value="{{ user_obj.email|default_if_none:'' }}"><br>
+
+        <label>Address:</label><br>
+        <input type="text" name="address" value="{{ profile.address|default_if_none:'' }}"><br>
+
+        {% if user_obj.is_staff %}
+            <label>Position:</label><br>
+            <input type="text" id="position" name="position" value="{{ profile.position|default_if_none:'' }}" disabled><br><br>
+        {% endif %}
+
+        <div class="form-buttons">
+            <button type="button" onclick="cancelEdit()">Cancel</button>
+            <button type="submit">Submit</button>
+        </div>
+    </form>
+</body>
