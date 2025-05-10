@@ -1,0 +1,141 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 2rem;
+    color: #ac3600;
+}
+
+h2 {
+    font-size: 2rem;
+    color: black;
+}
+
+a {
+    color: #ac3600;
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: 20px;
+    display: inline-block;
+    transition: color 0.3s ease-in-out;
+}
+
+a:hover {
+    color: #FFA500;
+}
+
+hr {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: white;
+    background-color: #ac3600;
+    border: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #FFA500;
+}
+
+button + button {
+    margin-left: 10px;
+}
+
+#insertForm {
+    display: none;
+    margin: auto auto 75px auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 300px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+#insertForm input, #insertForm select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#insertForm button {
+    width: 48%;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+#insertForm button:first-child {
+    float: left;
+}
+
+#insertForm button:last-child {
+    float: right;
+}
+
+table {
+    width: 40%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    font-weight: bold;
+    color: #ac3600;
+}
+
+td {
+    color: #555;
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.log_out {
+    margin-left: 250px;
+}
+
+.insert {
+    margin: 15px 0 25px 0;
+}
+
+.welcome {
+    margin-bottom: 50px;
+}
+
+.submit {
+    max-width: 85px;
+    padding: 5px;
+    width: 100%;
+    margin: 15px 0 35px 50px;
+}
