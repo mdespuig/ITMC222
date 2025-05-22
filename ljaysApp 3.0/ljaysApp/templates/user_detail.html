@@ -1,0 +1,175 @@
+{% load static %}
+<head>
+    <title>{{ user_obj.username }} - Details</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/user_details.css' %}">
+    <script src="{% static 'js/user_interface.js' %}"></script>
+</head>
+<body>
+    <header class="topbar">
+        <a class="logo" href="{% url 'admin_page' %}">Ljay's</a>
+        <button id="burger-btn" onclick="toggleSidebar()" class="burger">☰</button>
+        <div class="admin-dropdown">
+            {{ request.user.username }} ▾
+            <div class="dropdown-content">
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <nav class="nav-links" id="sidebarLinks">
+                <a href="{% url 'admin_user' %}" class="btn_active">User Management</a>
+                <a href="{% url 'admin_order' %}" class="btn">Order Management</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <section class="dashboard">
+                <h1>{{ user_obj.username }}'s Profile</h1>
+
+                <div id="display-section">
+                    <table class="profile-table">
+                        <tbody>
+                            <tr>
+                                <th>First Name:</th>
+                                <td>{{ user_obj.first_name|default:'---' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Last Name:</th>
+                                <td>{{ user_obj.last_name|default:'---' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Contact Number:</th>
+                                <td>{{ user_obj.profile.contact_number|default:'---' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td>{{ user_obj.email|default:'---' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Address:</th>
+                                <td>{{ user_obj.profile.address|default:'---' }}</td>
+                            </tr>
+                            <tr>
+                                <th>User ID:</th>
+                                <td>{{ user_obj.id }}</td>
+                            </tr>
+                            <tr>
+                                <th>User Type:</th>
+                                <td>{% if user_obj.is_staff %}Staff{% else %}Customer{% endif %}</td>
+                            </tr>
+                            {% if user_obj.is_staff %}
+                            <tr>
+                                <th>Position:</th>
+                                <td>{{ user_obj.profile.position|default:'---' }}</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                    <br/>
+                    {% if request.user.username == 'admin' %}
+                        <button onclick="enableEdit()">Edit</button>
+                    {% endif %}
+                </div>
+
+                {% if request.user.username == 'admin' %}
+                    <form id="edit-form" method="post" action="" style="display: none;">
+                        {% csrf_token %}
+                        <label>First Name:</label>
+                        <input type="text" name="first_name" value="{{ user_obj.first_name|default_if_none:'' }}">
+
+                        <label>Last Name:</label>
+                        <input type="text" name="last_name" value="{{ user_obj.last_name|default_if_none:'' }}">
+
+                        <label>Contact Number:</label>
+                        <input type="text" name="contact_number" value="{{ user_obj.profile.contact_number|default_if_none:'' }}">
+
+                        <label>Email:</label>
+                        <input type="email" name="email" value="{{ user_obj.email|default_if_none:'' }}">
+
+                        <label>Address:</label>
+                        <input type="text" name="address" value="{{ user_obj.profile.address|default_if_none:'' }}">
+                        
+                        <label>User Type:</label>
+                        <select name="user_type" id="user_type" onchange="togglePositionField()">
+                            <option value="customer" {% if not user_obj.is_staff %}selected{% endif %}>Customer</option>
+                            <option value="staff" {% if user_obj.is_staff %}selected{% endif %}>Staff</option>
+                        </select>
+
+                        <label>Position:</label>
+                        <input type="text" id="position" name="position" value="{{ user_obj.profile.position|default_if_none:'' }}">
+
+                        <div class="form-buttons">
+                            <button type="button" onclick="cancelEdit()">Cancel</button>
+                            <button type="submit">Submit</button>
+                        </div>
+                    </form>
+                {% endif %}
+
+                {% if not user_obj.is_staff %}
+                    <h2>Transaction History</h2>
+                    {% if transactions %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <table class="transaction-table">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" class="user-checkbox" onclick="toggleSelectAll(this)"></th>
+                                        <th>Transaction ID</th>
+                                        <th>Item</th>
+                                        <th>Quantity</th>
+                                        <th>Total Price</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for transaction in transactions %}
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" class="user-checkbox" name="delete_ids" value="{{ transaction.id }}" {% if not request.user.is_superuser %}disabled{% endif %}>
+                                            </td>
+                                            <td>{{ transaction.id }}</td>
+                                            <td>
+                                                {% for item in transaction.items_list %}
+                                                    {{ item.name }}<br>
+                                                {% endfor %}
+                                            </td>
+                                            <td>
+                                                {% for item in transaction.items_list %}
+                                                    {{ item.quantity }}<br>
+                                                {% endfor %}
+                                            </td>
+                                            <td>₱{{ transaction.total_price }}</td>
+                                            <td>
+                                                {% if request.user.username == 'admin' %}
+                                                    <select name="status_{{ transaction.id }}">
+                                                        <option value="preparing" {% if transaction.status == 'preparing' %}selected{% endif %}>Preparing</option>
+                                                        <option value="completed" {% if transaction.status == 'completed' %}selected{% endif %}>Completed</option>
+                                                        <option value="cancelled" {% if transaction.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                                    </select>
+                                                {% else %}
+                                                    {{ transaction.status }}
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            {% if request.user.username == 'admin' %}
+                                <br/>
+                                <button class="deletebtn" type="submit" {% if not request.user.is_superuser %}class="disabled"{% endif %}>Delete</button>
+                                <button type="submit">Update Status</button>
+                            {% endif %}
+                        </form>
+                    {% else %}
+                        <p>No transactions found.</p>
+                    {% endif %}
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</body>

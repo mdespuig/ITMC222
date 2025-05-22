@@ -1,0 +1,134 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Management: Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/admin_order.css' %}">
+    <script src="{% static 'js/fetch.js' %}"></script>
+</head>
+<body>
+<header class="topbar">
+    <a class="logo" href="{% url 'admin_page' %}">Ljay's</a>
+    <button id="burger-btn" onclick="toggleSidebar()" class="burger">☰</button>
+    <div class="admin-dropdown">
+        {{ request.user.username }} ▾
+        <div class="dropdown-content">
+            {% if not request.user.is_superuser %}
+                <a href="{% url 'view_profile' %}">View Profile</a>
+            {% endif %}
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+</header>
+
+<div class="admin-layout">
+    <aside class="sidebar">
+        <nav class="nav-links" id="sidebarLinks">
+            <a href="{% url 'admin_user' %}" class="btn">User Management</a>
+            <a href="{% url 'admin_order' %}" class="btn_active">Order Management</a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <section class="dashboard">
+            {% if request.user.is_superuser %}
+            <h1>Available Items</h1>
+            <form method="post">
+                {% csrf_token %}
+                <div class="order-name-container">
+                    <label for="package_name">Package Name:</label>
+                    <input type="text" id="package_name" name="package_name" placeholder="Enter Package name">
+                    <p class="error-message">Order name is required.</p>
+                </div>
+                <div class="container">
+                    <div id="main-dishes" class="tab-content">
+                        <h2>Main Dishes</h2>
+                        <div class="container">
+                            <!-- Main dishes will be dynamically added here -->
+                        </div>
+                    </div>
+            
+                    <div id="rice" class="tab-content">
+                        <h2>Rice</h2>
+                        <div class="container">
+                            <!-- Rice items will be dynamically added here -->
+                        </div>
+                    </div>
+            
+                    <div id="beverages" class="tab-content">
+                        <h2>Beverages</h2>
+                        <div class="container">
+                            <!-- Beverages will be dynamically added here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="totals">
+                    <p>Total Quantity: <span id="total_qty">0</span></p>
+                    <p>Total Price: <span id="total_price">₱0.00</span></p>
+                    <button type="button" onclick="clearFields()">Clear Fields</button>
+                    <button type="submit" name="create_order">Create Order</button>
+                </div>
+            </form>
+            {% else %}
+                <p>You don't have permission to create orders.</p>
+            {% endif %}
+
+            {% if request.user.is_staff %}
+            <form method="post" id="delete-form">
+                {% csrf_token %}
+                <div class="orders-table">
+                    <h2>Created Orders</h2>
+                    {% if orders %}
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="select-all" onclick="toggleSelectAll(this)" {% if not request.user.is_superuser %}disabled{% endif %}>
+                                    </th>
+                                    <th>Order ID</th>
+                                    <th>Package Name</th>
+                                    <th>Items</th>
+                                    <th>Total Quantity</th>
+                                    <th>Total Price</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="selected_orders" value="{{ order.id }}" class="order-checkbox" {% if not request.user.is_superuser %}disabled{% endif %}>
+                                    </td>
+                                    <td>{{ order.id }}</td>
+                                    <td>{{ order.name }}</td>
+                                    <td>
+                                        <ul>
+                                            {% for item in order.items.all %}
+                                            <li>{{ item.name }} - {{ item.quantity }} pax - ₱{{ item.unit_price|floatformat:2 }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </td>
+                                    <td>{{ order.total_quantity }}</td>
+                                    <td>₱{{ order.total_price|floatformat:2 }}</td>
+                                    <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" class="deletebtn" {% if not request.user.is_superuser %}disabled{% endif %}>Delete</button>
+                    {% else %}
+                    <p>No orders have been created yet.</p>
+                    {% endif %}
+                </div>
+            </form>
+            {% endif %}
+        </section>
+    </main>
+</div>
+</body>
+</html>
