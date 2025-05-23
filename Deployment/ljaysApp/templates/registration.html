@@ -1,0 +1,28 @@
+{% load static %}
+<head>
+    <title>Registration</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/registration.css' %}">
+</head>
+<body>
+    <h1>Ljay's</h1>
+    <h2>Registration</h2>
+    <div class="form-box">
+        <form action="{% url 'registration' %}" method="POST">
+            {% csrf_token %}
+            <p>Username</p><br />
+            <input type="text" id="username" name="username" class="input" /><br/>
+
+            <p>Password</p><br />
+            <input type="password" id="password" name="password" class="input" /><br/>
+
+            <p for="confirm-password">Confirm Password</p><br />
+            <input type="password" id="confirm-password" name="confirm-password" class="input" /><br/>
+
+            <button class="btn btn-filled submit">Create Account</button>
+        </form>
+        <p>Already have an account? <span><a href="{% url 'login' %}">Login here</a></span>.</p>
+    </div>
+</body>

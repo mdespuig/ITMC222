@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ljay's</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    <header>
+        <h1>Ljay's</h1>
+        <h2>Sign in</h2>
+    </header>
+    <div class="form-box">
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" class="input" required>
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="input" required>
+            <button type="submit" class="btn-filled">Login</button>
+        </form>
+        <p class="account">No account yet? <a href="{% url 'registration' %}">Create here.</a></p>
+    </div>
+</body>
+</html>

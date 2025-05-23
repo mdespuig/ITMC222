@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Management: Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/admin_user.css' %}">
+    <script src="{% static 'js/admin_dashboard.js' %}"></script>
+</head>
+<body>
+    <header class="topbar">
+        <a class="logo" href="{% url 'admin_page' %}">Ljay's</a>
+        <button id="burger-btn" onclick="toggleSidebar()" class="burger">☰</button>
+        <div class="admin-dropdown">
+            {{ request.user.username }} ▾
+            <div class="dropdown-content">
+                {% if not request.user.is_superuser %}
+                <a href="{% url 'view_profile' %}">View Profile</a>
+                {% endif %}
+                <a href="{% url 'logout' %}">Logout</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <nav class="nav-links" id="sidebarLinks">
+                <a href="{% url 'admin_user' %}" class="btn">User Management</a>
+                <a href="{% url 'admin_order' %}" class="btn">Order Management</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <section class="dashboard">
+                <h1>Hello, {{ request.user.username }}!</h1>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
