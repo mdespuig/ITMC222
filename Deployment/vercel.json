@@ -1,0 +1,10 @@
+{
+    "builds": [{
+        "src": "ljays/wsgi.py",
+        "use": "@vercel/python",
+        "config": { "maxLambdaSize": "15mb", "runtime": "python3.12" }
+    }],
+    "routes": [
+        { "src": "/(.*)", "dest": "ljays/wsgi.py" }
+    ]
+}

@@ -1,0 +1,59 @@
+/* Table Style for Transaction History */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    font-weight: bold;
+    color: #ac3600;
+}
+
+td {
+    color: #555;
+}
+
+/* General Body Styles */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+    text-align: center;
+    padding: 20px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: #ac3600;
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+}
+
+a {
+    color: #ac3600;
+    text-decoration: none;
+    font-weight: 500;
+    margin-top: 20px;
+    display: inline-block;
+    transition: color 0.3s ease-in-out;
+}
+
+a:hover {
+    color: #FFA500;
+}
+
+hr {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
