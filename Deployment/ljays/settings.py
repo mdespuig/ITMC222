@@ -79,9 +79,11 @@ WSGI_APPLICATION = 'ljays.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME' : 'Ljays',
-        'USER' : 'admin',
-        'PASSWORD' : '123',
+        'HOST': os.getenv('PGHOST', 'shortline.proxy.rlwy.net'),
+        'PORT': os.getenv('PGPORT', '17009'),
+        'NAME': os.getenv('PGDATABASE', 'railway'),
+        'USER': os.getenv('PGUSER', 'postgres'),
+        'PASSWORD': os.getenv('PGPASSWORD', 'pyTiZQUJXyGLhWSDDMJXLUACcpacUfat'),
     }
 }
 
