@@ -13,6 +13,9 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
 from django.urls import reverse  # Add this import
+import logging
+
+logger = logging.getLogger(__name__)
 
 def home(request):
  return render(request, "homepage.html")
@@ -339,42 +342,47 @@ def admin_order(request):
     rice = Item.objects.filter(category='rice')
     beverages = Item.objects.filter(category='beverage')
 
-    if request.method == 'POST' and 'selected_orders' in request.POST:
-        selected_ids = request.POST.getlist('selected_orders')
-        Order.objects.filter(id__in=selected_ids, created_by=request.user).delete()
-        messages.success(request, "Selected orders deleted successfully.")
-        return redirect('admin_order')
-
     if request.method == 'POST' and 'create_order' in request.POST:
         package_name = request.POST.get('package_name', '').strip()
+        total_quantity = int(request.POST.get('total_quantity', 0))
+        total_price = float(request.POST.get('total_price', 0.00))
+
         if not package_name:
             messages.error(request, "Order name is required.")
             return redirect('admin_order')
 
-        order = Order.objects.create(created_by=request.user, name=package_name)
+        if total_quantity == 0 or total_price == 0.00:
+            messages.error(request, "Please select items to create an order.")
+            return redirect('admin_order')
 
-        # Process items from the form
+        # Create the order
+        order = Order.objects.create(
+            created_by=request.user,
+            name=package_name,
+            total_quantity=total_quantity,
+            total_price=total_price
+        )
+
+        # Process items from the form and save them to the database
         all_items = main_dishes | rice | beverages
         for item in all_items:
             quantity = int(request.POST.get(f'{item.item_id}_qty', 0))
             if quantity > 0:
                 OrderItem.objects.create(
-                    order=order,
+                    order=order,  # Associate the item with the order
                     name=item.name,
                     quantity=quantity,
                     unit_price=item.price
                 )
 
-        order.calculate_total_price()
-
         messages.success(request, "Order successfully created.")
         return redirect('admin_order')
 
-    # Fetch orders based on user role
+    # Fetch orders based on user role, including related items
     if request.user.is_superuser or request.user.is_staff:
-        orders = Order.objects.all().order_by('-created_at')
+        orders = Order.objects.prefetch_related('items').order_by('-created_at')
     else:
-        orders = Order.objects.filter(created_by=request.user).order_by('-created_at')
+        orders = Order.objects.filter(created_by=request.user).prefetch_related('items').order_by('-created_at')
 
     return render(request, 'admin_order.html', {
         'main_dishes': main_dishes,
@@ -399,3 +407,11 @@ def items_json(request):
     
     items = Item.objects.all().values('id', 'name', 'item_id', 'price', 'category')
     return JsonResponse(list(items), safe=False)
+
+@login_required
+def cart_items_json(request):
+    # Example logic to fetch cart items (replace with your actual cart logic)
+    cart_items = OrderItem.objects.filter(order__created_by=request.user).values(
+        'name', 'quantity', 'unit_price'
+    )
+    return JsonResponse(list(cart_items), safe=False)

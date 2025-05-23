@@ -43,6 +43,39 @@ function fetchItems() {
         .catch(error => console.error("Error fetching items:", error));
 }
 
+function fetchCartItems() {
+    fetch("/cart-items-json/") // Endpoint to fetch cart items from the server
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(cartData => {
+            const cartContainer = document.querySelector(".cart-container");
+
+            // Clear existing cart items
+            cartContainer.innerHTML = "";
+
+            // Add new cart items
+            if (cartData.length === 0) {
+                cartContainer.innerHTML = `<p>Your cart is empty.</p>`;
+            } else {
+                cartData.forEach(cartItem => {
+                    const cartItemElement = document.createElement("div");
+                    cartItemElement.classList.add("cart-item");
+
+                    cartItemElement.innerHTML = `
+                        <p>${cartItem.name} - Quantity: ${cartItem.quantity} - Total: ₱${(cartItem.quantity * cartItem.unit_price).toFixed(2)}</p>
+                    `;
+
+                    cartContainer.appendChild(cartItemElement); // Append the cart item to the cart container
+                });
+            }
+        })
+        .catch(error => console.error("Error fetching cart items:", error));
+}
+
 // Function to update quantity and total price
 function updateQuantity(itemId, change, price) {
     const qtyInput = document.getElementById(`${itemId}_qty`);
@@ -84,6 +117,14 @@ function updateTotals() {
     // Update totals in the DOM
     document.getElementById("total_qty").textContent = totalQty;
     document.getElementById("total_price").textContent = `₱${totalPrice.toFixed(2)}`;
+
+    // Update hidden form fields for server-side processing
+    const totalQtyInput = document.querySelector("input[name='total_quantity']");
+    const totalPriceInput = document.querySelector("input[name='total_price']");
+    if (totalQtyInput && totalPriceInput) {
+        totalQtyInput.value = totalQty;
+        totalPriceInput.value = totalPrice.toFixed(2);
+    }
 }
 
 // Function to clear all fields and reset the form
@@ -119,6 +160,8 @@ function toggleSelectAll(selectAllCheckbox) {
 }
 
 setInterval(fetchItems, 15000);
+setInterval(fetchCartItems, 15000); // Fetch cart items periodically
 
 // Initial fetch
 fetchItems();
+fetchCartItems();
