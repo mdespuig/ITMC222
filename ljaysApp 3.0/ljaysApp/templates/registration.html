@@ -24,12 +24,5 @@
             <button class="btn btn-filled submit">Create Account</button>
         </form>
         <p>Already have an account? <span><a href="{% url 'login' %}">Login here</a></span>.</p>
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <p style="color: red; text-align: center;">{{ message }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
     </div>
 </body>

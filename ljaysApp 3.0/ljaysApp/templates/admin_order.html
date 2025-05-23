@@ -68,11 +68,11 @@
                 <div class="totals">
                     <p>Total Quantity: <span id="total_qty">0</span></p>
                     <p>Total Price: <span id="total_price">₱0.00</span></p>
-                    <input type="hidden" name="total_quantity" value="0">
-                    <input type="hidden" name="total_price" value="0.00">
                     <button type="button" onclick="clearFields()">Clear Fields</button>
                     <button type="submit" name="create_order">Create Order</button>
                 </div>
+                <input type="hidden" id="cart-items-input" name="cart_items">
+                <input type="hidden" id="total-price-input" name="total_price">
             </form>
             {% else %}
                 <p>You don't have permission to create orders.</p>
@@ -89,7 +89,7 @@
                             <thead>
                                 <tr>
                                     <th>
-                                        <input type="checkbox" id="select-all" onclick="toggleSelectAll(this)" {% if not request.user.is_superuser %}disabled{% endif %}>
+                                        <input type="checkbox" id="select-all" onclick="toggleSelectAll(this)">
                                     </th>
                                     <th>Order ID</th>
                                     <th>Package Name</th>
@@ -103,16 +103,14 @@
                                 {% for order in orders %}
                                 <tr>
                                     <td>
-                                        <input type="checkbox" name="selected_orders" value="{{ order.id }}" class="order-checkbox" {% if not request.user.is_superuser %}disabled{% endif %}>
+                                        <input type="checkbox" name="selected_orders" value="{{ order.id }}" class="order-checkbox">
                                     </td>
                                     <td>{{ order.id }}</td>
-                                    <td>{{ order.name }}</td>
+                                    <td>{{ order.name  }}</td>
                                     <td>
                                         <ul>
                                             {% for item in order.items.all %}
-                                            <li>{{ item.name }} - {{ item.quantity }} pax - ₱{{ item.unit_price|floatformat:2 }}</li>
-                                            {% empty %}
-                                            <li>No items in this order.</li>
+                                            <li>{{ item.name }} - {{ item.quantity }} x ₱{{ item.unit_price|floatformat:2 }}</li>
                                             {% endfor %}
                                         </ul>
                                     </td>

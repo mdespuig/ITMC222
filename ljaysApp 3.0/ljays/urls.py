@@ -38,5 +38,4 @@ urlpatterns = [
     path('staff/', views.staff_page, name='staff_page'),
     path('users-json/', views.users_json, name='users_json'),
     path('items-json/', views.items_json, name='items_json'),
-    path('cart-items-json/', views.cart_items_json, name='cart_items_json'),
 ]

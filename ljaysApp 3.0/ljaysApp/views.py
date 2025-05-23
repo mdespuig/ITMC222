@@ -12,10 +12,7 @@ from .models import Profile, Transaction, Order, OrderItem, Item
 import json
 from django.http import JsonResponse
 from django.views.decorators.cache import never_cache
-from django.urls import reverse  # Add this import
-import logging
-
-logger = logging.getLogger(__name__)
+from django.urls import reverse
 
 def home(request):
  return render(request, "homepage.html")
@@ -156,14 +153,15 @@ def user_detail(request, user_id):
     if user.username.lower() == 'admin':
         return redirect('admin_userm')
 
+    # Fetch transactions and include package_name
     transactions = Transaction.objects.filter(user=user).order_by('-created_at')
     for transaction in transactions:
         try:
-            items_dict = json.loads(transaction.items)
-
+            # Parse the items JSON string
+            items_list = json.loads(transaction.items)
             transaction.items_list = [
                 {"name": item["name"], "quantity": item["quantity"]}
-                for item in items_dict.values()
+                for item in items_list
             ]
         except (json.JSONDecodeError, KeyError):
             transaction.items_list = []
@@ -223,25 +221,6 @@ def dashboard(request):
     profile, _ = Profile.objects.get_or_create(user=user)
     transactions = Transaction.objects.filter(user=user).order_by('-created_at')
 
-    for transaction in transactions:
-        try:
-            # Parse the items JSON string
-            items_dict = json.loads(transaction.items)
-
-            if not isinstance(items_dict, dict):
-                raise ValueError("Invalid items format. Expected a dictionary.")
-
-            # Extract the first item's name for the package name
-            first_item = next(iter(items_dict.values()), None)
-            transaction.package_name = first_item['name'] if first_item else "N/A"
-
-            # Calculate the total quantity
-            transaction.total_quantity = sum(item['quantity'] for item in items_dict.values())
-        except (json.JSONDecodeError, KeyError, ValueError):
-            # Handle invalid or missing data
-            transaction.package_name = "N/A"
-            transaction.total_quantity = 0
-
     orders = Order.objects.all()
 
     return render(request, 'dashboard.html', {
@@ -281,9 +260,8 @@ def user_profile(request):
 
 @login_required
 def transaction_history(request):
-    transactions = Transaction.objects.filter(user=request.user).order_by('created_at')
-
-    return render(request, 'transactions.html', {
+    transactions = Transaction.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'dashboard.html', {
         'transactions': transactions
     })
 
@@ -293,33 +271,39 @@ def submit_order(request):
         cart_items = request.POST.get('cart_items', '').strip()
         total_price = request.POST.get('total_price', '').strip()
 
-        if not cart_items or cart_items == '[]' or float(total_price) <= 0:
-            messages.error(request, "Your cart is empty. Please add items before creating an order.")
+        # Validate cart_items and total_price
+        if not cart_items or cart_items == '[]' or not total_price or float(total_price) <= 0:
+            messages.error(request, "Your cart is empty or invalid. Please add items before creating a transaction.")
             return redirect('dashboard')
 
         try:
-            # Parse cart items
+            # Parse cart_items into a Python object
             cart_items = json.loads(cart_items)
-            total_quantity = sum(item['quantity'] for item in cart_items.values())
 
-            # Extract the package name (use the first item's name as the package name)
-            first_item = next(iter(cart_items.values()), None)
-            package_name = first_item['name'] if first_item else "N/A"
+            # Ensure cart_items is a list of dictionaries
+            if not isinstance(cart_items, list):
+                raise ValueError("Invalid cart_items format. Expected a list of dictionaries.")
 
-            # Create a new transaction
-            transaction = Transaction.objects.create(
+            # Extract the package name from the first item in the cart
+            package_name = cart_items[0]['name'] if cart_items else "Unnamed Package"
+
+            # Create a transaction entry
+            Transaction.objects.create(
                 user=request.user,
-                package_name=package_name,
-                items=json.dumps(cart_items),
+                items=json.dumps(cart_items),  # Store cart items as a JSON string
                 total_price=total_price,
-                status="Preparing"
+                status='pending',  # Default status
+                package_name=package_name,  # Use the package name from the cart
             )
 
-            messages.success(request, "Order submitted successfully!")
-            return redirect(f"{reverse('dashboard')}?active_tab=transactions-section")  # Redirect to the transactions tab
+            messages.success(request, "Transaction created successfully!")
+            return redirect('dashboard')
 
-        except (json.JSONDecodeError, ValueError, KeyError):
-            messages.error(request, "Invalid cart data.")
+        except json.JSONDecodeError:
+            messages.error(request, "Invalid JSON format in cart_items.")
+            return redirect('dashboard')
+        except (ValueError, KeyError) as e:
+            messages.error(request, f"Invalid cart data: {e}")
             return redirect('dashboard')
 
     return redirect('dashboard')
@@ -342,47 +326,42 @@ def admin_order(request):
     rice = Item.objects.filter(category='rice')
     beverages = Item.objects.filter(category='beverage')
 
+    if request.method == 'POST' and 'selected_orders' in request.POST:
+        selected_ids = request.POST.getlist('selected_orders')
+        Order.objects.filter(id__in=selected_ids, created_by=request.user).delete()
+        messages.success(request, "Selected orders deleted successfully.")
+        return redirect('admin_order')
+
     if request.method == 'POST' and 'create_order' in request.POST:
         package_name = request.POST.get('package_name', '').strip()
-        total_quantity = int(request.POST.get('total_quantity', 0))
-        total_price = float(request.POST.get('total_price', 0.00))
-
         if not package_name:
             messages.error(request, "Order name is required.")
             return redirect('admin_order')
 
-        if total_quantity == 0 or total_price == 0.00:
-            messages.error(request, "Please select items to create an order.")
-            return redirect('admin_order')
+        order = Order.objects.create(created_by=request.user, name=package_name)
 
-        # Create the order
-        order = Order.objects.create(
-            created_by=request.user,
-            name=package_name,
-            total_quantity=total_quantity,
-            total_price=total_price
-        )
-
-        # Process items from the form and save them to the database
+        # Process items from the form
         all_items = main_dishes | rice | beverages
         for item in all_items:
             quantity = int(request.POST.get(f'{item.item_id}_qty', 0))
             if quantity > 0:
                 OrderItem.objects.create(
-                    order=order,  # Associate the item with the order
+                    order=order,
                     name=item.name,
                     quantity=quantity,
                     unit_price=item.price
                 )
 
+        order.calculate_total_price()
+
         messages.success(request, "Order successfully created.")
         return redirect('admin_order')
 
-    # Fetch orders based on user role, including related items
+    # Fetch orders based on user role
     if request.user.is_superuser or request.user.is_staff:
-        orders = Order.objects.prefetch_related('items').order_by('-created_at')
+        orders = Order.objects.all().order_by('-created_at')
     else:
-        orders = Order.objects.filter(created_by=request.user).prefetch_related('items').order_by('-created_at')
+        orders = Order.objects.filter(created_by=request.user).order_by('-created_at')
 
     return render(request, 'admin_order.html', {
         'main_dishes': main_dishes,
@@ -407,11 +386,3 @@ def items_json(request):
     
     items = Item.objects.all().values('id', 'name', 'item_id', 'price', 'category')
     return JsonResponse(list(items), safe=False)
-
-@login_required
-def cart_items_json(request):
-    # Example logic to fetch cart items (replace with your actual cart logic)
-    cart_items = OrderItem.objects.filter(order__created_by=request.user).values(
-        'name', 'quantity', 'unit_price'
-    )
-    return JsonResponse(list(cart_items), safe=False)

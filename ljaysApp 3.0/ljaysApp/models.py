@@ -39,16 +39,12 @@ class Order(models.Model):
     name = models.CharField(max_length=255, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    total_quantity = models.PositiveIntegerField(default=0)  # Ensure this is a standard field
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  # Add this field
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total_quantity = models.PositiveIntegerField(default=0)
 
     def calculate_total_price(self):
-        """Calculate and update the total price based on order items."""
-        self.total_price = sum(item.total_price for item in self.items.all())
-        self.save()
-
-    def calculate_total_quantity(self):
-        """Calculate and update the total quantity based on order items."""
+        """Calculate and update the total price and total quantity."""
+        self.total_price = sum(item.quantity * item.unit_price for item in self.items.all())
         self.total_quantity = sum(item.quantity for item in self.items.all())
         self.save()
 
@@ -57,9 +53,9 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
-    name = models.CharField(max_length=100)
-    quantity = models.PositiveIntegerField(default=0)
-    unit_price = models.DecimalField(max_digits=8, decimal_places=2)
+    name = models.CharField(max_length=255)
+    quantity = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     @property
     def total_price(self):

@@ -39,41 +39,11 @@ function fetchItems() {
                     container.appendChild(itemElement); // Append the item to the container
                 });
             }
+
+            // Recalculate totals after fetching items
+            updateTotals();
         })
         .catch(error => console.error("Error fetching items:", error));
-}
-
-function fetchCartItems() {
-    fetch("/cart-items-json/") // Endpoint to fetch cart items from the server
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(cartData => {
-            const cartContainer = document.querySelector(".cart-container");
-
-            // Clear existing cart items
-            cartContainer.innerHTML = "";
-
-            // Add new cart items
-            if (cartData.length === 0) {
-                cartContainer.innerHTML = `<p>Your cart is empty.</p>`;
-            } else {
-                cartData.forEach(cartItem => {
-                    const cartItemElement = document.createElement("div");
-                    cartItemElement.classList.add("cart-item");
-
-                    cartItemElement.innerHTML = `
-                        <p>${cartItem.name} - Quantity: ${cartItem.quantity} - Total: ₱${(cartItem.quantity * cartItem.unit_price).toFixed(2)}</p>
-                    `;
-
-                    cartContainer.appendChild(cartItemElement); // Append the cart item to the cart container
-                });
-            }
-        })
-        .catch(error => console.error("Error fetching cart items:", error));
 }
 
 // Function to update quantity and total price
@@ -104,28 +74,42 @@ function updateQuantity(itemId, change, price) {
 function updateTotals() {
     let totalQty = 0;
     let totalPrice = 0;
+    const items = [];
 
     // Loop through all items and calculate totals
     document.querySelectorAll(".menu-item").forEach(item => {
         const qty = parseInt(item.querySelector("input[type='hidden']").value) || 0;
         const price = parseFloat(item.querySelector(".price span").textContent) || 0;
 
-        totalQty += qty;
-        totalPrice += qty * price;
+        if (qty > 0) {
+            totalQty += qty;
+            totalPrice += qty * price;
+
+            // Add item details to the items array
+            items.push({
+                name: item.querySelector(".item-info h3").textContent.trim(),
+                quantity: qty,
+                unit_price: price
+            });
+        }
     });
 
     // Update totals in the DOM
     document.getElementById("total_qty").textContent = totalQty;
     document.getElementById("total_price").textContent = `₱${totalPrice.toFixed(2)}`;
 
-    // Update hidden form fields for server-side processing
-    const totalQtyInput = document.querySelector("input[name='total_quantity']");
-    const totalPriceInput = document.querySelector("input[name='total_price']");
-    if (totalQtyInput && totalPriceInput) {
-        totalQtyInput.value = totalQty;
-        totalPriceInput.value = totalPrice.toFixed(2);
-    }
+    // Store data in hidden inputs for submission
+    document.getElementById("cart-items-input").value = JSON.stringify(items);
+    document.getElementById("total-price-input").value = totalPrice.toFixed(2);
 }
+
+// Attach event listeners to quantity inputs
+document.querySelectorAll(".item-quantity").forEach(input => {
+    input.addEventListener("input", updateTotals);
+});
+
+// Initialize totals on page load
+document.addEventListener("DOMContentLoaded", updateTotals);
 
 // Function to clear all fields and reset the form
 function clearFields() {
@@ -159,9 +143,8 @@ function toggleSelectAll(selectAllCheckbox) {
     });
 }
 
-setInterval(fetchItems, 15000);
-setInterval(fetchCartItems, 15000); // Fetch cart items periodically
+// Fetch items periodically
+setInterval(fetchItems, 30000);
 
 // Initial fetch
 fetchItems();
-fetchCartItems();

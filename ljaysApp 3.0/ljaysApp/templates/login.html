@@ -24,12 +24,5 @@
         </form>
         <p class="account">No account yet? <a href="{% url 'registration' %}">Create here.</a></p>
     </div>
-    {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-                <p style="color: red; text-align: center;">{{ message }}</p>
-            {% endfor %}
-        </div>
-    {% endif %}
 </body>
 </html>

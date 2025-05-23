@@ -95,7 +95,6 @@
                     </div>
                     <input type="hidden" name="cart_items" id="cart-items-input">
                     <input type="hidden" name="total_price" id="total-price-input">
-                    <input type="hidden" name="active_tab" id="active-tab-input" value="transactions-section">
                 </form>
             </section>
 
@@ -108,8 +107,7 @@
                                 <thead>
                                     <tr>
                                         <th>ID</th>
-                                        <th>Item</th>
-                                        <th>Quantity</th>
+                                        <th>Package Name</th>
                                         <th>Total Price</th>
                                         <th>Status</th>
                                         <th>Date</th>
@@ -120,7 +118,6 @@
                                     <tr>
                                         <td>{{ transaction.id }}</td>
                                         <td>{{ transaction.package_name }}</td>
-                                        <td>{{ transaction.total_quantity }}</td>
                                         <td>₱{{ transaction.total_price }}</td>
                                         <td>{{ transaction.get_status_display }}</td>
                                         <td>{{ transaction.created_at|date:"M d, Y H:i" }}</td>

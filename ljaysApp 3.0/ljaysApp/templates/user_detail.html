@@ -120,6 +120,7 @@
                                     <tr>
                                         <th><input type="checkbox" class="user-checkbox" onclick="toggleSelectAll(this)"></th>
                                         <th>Transaction ID</th>
+                                        <th>Package Name</th>
                                         <th>Item</th>
                                         <th>Quantity</th>
                                         <th>Total Price</th>
@@ -133,6 +134,7 @@
                                                 <input type="checkbox" class="user-checkbox" name="delete_ids" value="{{ transaction.id }}" {% if not request.user.is_superuser %}disabled{% endif %}>
                                             </td>
                                             <td>{{ transaction.id }}</td>
+                                            <td>{{ transaction.package_name }}</td>
                                             <td>
                                                 {% for item in transaction.items_list %}
                                                     {{ item.name }}<br>

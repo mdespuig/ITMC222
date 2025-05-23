@@ -425,25 +425,49 @@ setInterval(fetchUsers, 15000);
 fetchUsers();
 
 function prepareCartData() {
-    const cartItems = {};
+    const cartItems = [];
     const rows = document.querySelectorAll("#cart-items tbody tr");
 
-    rows.forEach(row => {
-        const itemId = row.querySelector(".item-id").textContent.trim();
-        const packageName = row.querySelector(".package-name").textContent.trim();
-        const quantity = parseInt(row.querySelector(".quantity").textContent.trim());
-        const unitPrice = parseFloat(row.querySelector(".subtotal").textContent.trim().replace("₱", ""));
+    if (!rows.length) {
+        console.error("No rows found in the cart table.");
+        return;
+    }
 
-        cartItems[itemId] = {
-            name: packageName,
-            quantity: quantity,
-            unit_price: unitPrice
-        };
+    rows.forEach(row => {
+        const itemId = row.querySelector("td:nth-child(1)")?.textContent.trim();
+        const packageName = row.querySelector("td:nth-child(2)")?.textContent.trim();
+        const quantity = parseInt(row.querySelector("td:nth-child(3)")?.textContent.trim() || "0");
+        const subtotal = parseFloat(row.querySelector("td:nth-child(4)")?.textContent.trim().replace("₱", "") || "0");
+
+        if (itemId && packageName) {
+            cartItems.push({
+                id: itemId,
+                name: packageName,
+                quantity: quantity,
+                unit_price: subtotal / quantity || 0
+            });
+        }
     });
 
-    const totalPrice = parseFloat(document.getElementById("cart_total_price").textContent.replace("₱", ""));
+    const totalPriceElement = document.getElementById("cart_total_price");
+    const totalPrice = totalPriceElement ? parseFloat(totalPriceElement.textContent.replace("₱", "")) : 0;
 
-    // Populate hidden input fields
-    document.getElementById("cart-items-input").value = JSON.stringify(cartItems);
-    document.getElementById("total-price-input").value = totalPrice.toFixed(2);
+    console.log("Cart Items:", cartItems);
+    console.log("Total Price:", totalPrice);
+
+    const cartItemsInput = document.getElementById("cart-items-input");
+    const totalPriceInput = document.getElementById("total-price-input");
+
+    if (cartItemsInput) {
+        cartItemsInput.value = JSON.stringify(cartItems);
+    } else {
+        console.error("Element with ID 'cart-items-input' not found.");
+    }
+
+    if (totalPriceInput) {
+        totalPriceInput.value = totalPrice.toFixed(2);
+    } else {
+        console.error("Element with ID 'total-price-input' not found.");
+    }
 }
+
